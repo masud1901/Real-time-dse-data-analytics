@@ -1,0 +1,18 @@
+graph TD
+    subgraph "Data Source (Simulation)"
+        A[DSE Streaming CSV] --> B{Kafka Producer};
+    end
+
+    subgraph "Real-time Data Pipeline (Docker)"
+        B --> C[Kafka Topic: dse_index_data];
+        C --> D{Spark Streaming Consumer};
+        D --> E{Feature Engineering};
+        E --> F[ML Model Prediction];
+        F --> G((Console Output));
+    end
+
+    subgraph "Offline Model Training"
+       H[DSE Training CSV] --> I{Initial Train Script};
+       I --> J(Saved Model .pkl);
+       J --> F;
+    end
