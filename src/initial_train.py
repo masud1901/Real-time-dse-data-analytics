@@ -6,10 +6,10 @@ import joblib
 import os
 
 # Define file paths
-TRAINING_DATA_PATH = 'data/training_data/dse_training.csv'
-MODEL_DIR = 'data/models'
-MODEL_PATH = os.path.join(MODEL_DIR, 'dsex_model_v1.pkl')
-COLUMNS_PATH = os.path.join(MODEL_DIR, 'model_columns.json')
+TRAINING_DATA_PATH = "data/training_data/dse_training.csv"
+MODEL_DIR = "data/models"
+MODEL_PATH = os.path.join(MODEL_DIR, "dsex_model_v1.pkl")
+COLUMNS_PATH = os.path.join(MODEL_DIR, "model_columns.json")
 
 
 def train_initial_model():
@@ -32,23 +32,23 @@ def train_initial_model():
 
     # --- 2. Feature Engineering ---
     print("🔧 Engineering features...")
-    df.set_index('Date', inplace=True)
+    df.set_index("Date", inplace=True)
 
     # Simple Moving Averages
-    df['SMA_5'] = df['Price'].rolling(window=5).mean()
-    df['SMA_20'] = df['Price'].rolling(window=20).mean()
+    df["SMA_5"] = df["Price"].rolling(window=5).mean()
+    df["SMA_20"] = df["Price"].rolling(window=20).mean()
 
     # Price Momentum (change over 5 days)
-    df['Momentum_5'] = df['Price'].diff(5)
+    df["Momentum_5"] = df["Price"].diff(5)
 
     # Volume Moving Average
-    df['Volume_SMA_20'] = df['Volume'].rolling(window=20).mean()
+    df["Volume_SMA_20"] = df["Volume"].rolling(window=20).mean()
 
     print("✅ Created features: SMA_5, SMA_20, Momentum_5, Volume_SMA_20")
 
     # --- 3. Define Target Variable ---
     # We want to predict if the price will go UP (1) or DOWN (0) tomorrow.
-    df['Target'] = (df['Price'].shift(-1) > df['Price']).astype(int)
+    df["Target"] = (df["Price"].shift(-1) > df["Price"]).astype(int)
     print("✅ Created target variable: 'Target' (1 for up, 0 for down).")
 
     # --- 4. Prepare Data for Model ---
@@ -57,13 +57,14 @@ def train_initial_model():
     print(f"✅ Dropped NaN rows. Final dataset size: {len(df)} rows.")
 
     # Define feature columns
-    feature_columns = ['SMA_5', 'SMA_20', 'Momentum_5', 'Volume_SMA_20']
+    feature_columns = ["SMA_5", "SMA_20", "Momentum_5", "Volume_SMA_20"]
     X = df[feature_columns]
-    y = df['Target']
+    y = df["Target"]
 
     # Save the column list for the inference pipeline
     import json
-    with open(COLUMNS_PATH, 'w') as f:
+
+    with open(COLUMNS_PATH, "w") as f:
         json.dump(feature_columns, f)
     print(f"✅ Saved feature column names to '{COLUMNS_PATH}'")
 
@@ -71,9 +72,7 @@ def train_initial_model():
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, shuffle=False
     )
-    print(
-        f"✅ Split data: training ({len(X_train)}), testing ({len(X_test)})."
-    )
+    print(f"✅ Split data: training ({len(X_train)}), testing ({len(X_test)}).")
 
     # --- 5. Train the Model ---
     print("🤖 Training Logistic Regression model...")
@@ -100,4 +99,4 @@ def train_initial_model():
 
 
 if __name__ == "__main__":
-    train_initial_model() 
+    train_initial_model()

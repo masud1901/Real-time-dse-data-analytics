@@ -2,9 +2,9 @@ import pandas as pd
 import os
 
 # Define file paths
-RAW_DATA_PATH = 'data/raw/DSEX 2013-25.csv'
-TRAINING_DATA_PATH = 'data/training_data/dse_training.csv'
-SIMULATION_DATA_PATH = 'data/simulation_data/dse_streaming.csv'
+RAW_DATA_PATH = "data/raw/DSEX 2013-25.csv"
+TRAINING_DATA_PATH = "data/training_data/dse_training.csv"
+SIMULATION_DATA_PATH = "data/simulation_data/dse_streaming.csv"
 
 
 def clean_numeric_value(value):
@@ -13,7 +13,7 @@ def clean_numeric_value(value):
     Handles non-string inputs gracefully.
     """
     if isinstance(value, str):
-        return float(value.replace(',', ''))
+        return float(value.replace(",", ""))
     return value
 
 
@@ -40,11 +40,11 @@ def prepare_data():
     print("🧹 Cleaning and preprocessing data...")
 
     # Convert 'Date' column to datetime objects
-    df['Date'] = pd.to_datetime(df['Date'], format='%m/%d/%Y')
+    df["Date"] = pd.to_datetime(df["Date"], format="%m/%d/%Y")
     print("✅ Converted 'Date' column to datetime objects.")
 
     # Clean numeric columns
-    numeric_cols = ['Price', 'Open', 'High', 'Low']
+    numeric_cols = ["Price", "Open", "High", "Low"]
     for col in numeric_cols:
         df[col] = df[col].apply(clean_numeric_value)
     print(f"✅ Cleaned numeric columns: {numeric_cols}")
@@ -53,32 +53,32 @@ def prepare_data():
     def convert_volume(vol):
         if isinstance(vol, str):
             vol = vol.strip().upper()
-            if 'M' in vol:
-                return float(vol.replace('M', '')) * 1_000_000
-            if 'K' in vol:
-                return float(vol.replace('K', '')) * 1_000
+            if "M" in vol:
+                return float(vol.replace("M", "")) * 1_000_000
+            if "K" in vol:
+                return float(vol.replace("K", "")) * 1_000
         return 0  # Return 0 if format is unexpected or NaN
 
-    df['Volume'] = df['Vol.'].apply(convert_volume)
-    df.drop('Vol.', axis=1, inplace=True)
+    df["Volume"] = df["Vol."].apply(convert_volume)
+    df.drop("Vol.", axis=1, inplace=True)
     print("✅ Processed 'Vol.' column into numeric 'Volume'.")
 
     # Clean 'Change %' column
-    df['Change_Pct'] = df['Change %'].str.replace('%', '').astype(float)
-    df.drop('Change %', axis=1, inplace=True)
+    df["Change_Pct"] = df["Change %"].str.replace("%", "").astype(float)
+    df.drop("Change %", axis=1, inplace=True)
     print("✅ Processed 'Change %' into numeric 'Change_Pct'.")
 
     # Sort by date to ensure correct order for streaming
-    df.sort_values(by='Date', ascending=True, inplace=True)
+    df.sort_values(by="Date", ascending=True, inplace=True)
     print("✅ Sorted data by date ascending.")
 
     # --- 3. Split the Data ---
     # We'll use data up to the end of 2023 for training
     # and 2024 onwards for simulation.
-    split_date = '2024-01-01'
+    split_date = "2024-01-01"
 
-    training_df = df[df['Date'] < split_date]
-    simulation_df = df[df['Date'] >= split_date]
+    training_df = df[df["Date"] < split_date]
+    simulation_df = df[df["Date"] >= split_date]
 
     if training_df.empty or simulation_df.empty:
         print("❌ ERROR: Split resulted in one or both dataframes being empty.")
@@ -90,10 +90,7 @@ def prepare_data():
 
     print(f"🔪 Splitting data at {split_date}:")
     print(f"   - {len(training_df)} rows for Training (before {split_date})")
-    print(
-        f"   - {len(simulation_df)} rows for Simulation "
-        f"({split_date} and after)"
-    )
+    print(f"   - {len(simulation_df)} rows for Simulation " f"({split_date} and after)")
 
     # --- 4. Save the Split Datasets ---
     training_df.to_csv(TRAINING_DATA_PATH, index=False)
@@ -107,4 +104,4 @@ def prepare_data():
 
 
 if __name__ == "__main__":
-    prepare_data() 
+    prepare_data()

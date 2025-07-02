@@ -5,15 +5,15 @@ import time
 import logging
 
 # Setup basic logging
-log_format = '%(asctime)s - %(levelname)s - %(message)s'
+log_format = "%(asctime)s - %(levelname)s - %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_format)
 
 # --- Configuration ---
-KAFKA_BROKER = 'localhost:9092'
-KAFKA_TOPIC = 'dse_index_data'
-DATA_SOURCE_FILE = 'data/dse_streaming.csv'
-# Time to wait between sending messages
-SIMULATION_SPEED_SECONDS = 5
+KAFKA_BROKER = "localhost:9092"
+KAFKA_TOPIC = "dse_index_data"
+DATA_SOURCE_FILE = "data/simulation_data/dse_streaming.csv"
+SIMULATION_SPEED_SECONDS = 5  # Time to wait between sending messages
+
 
 def create_kafka_producer(broker_url):
     """Creates a Kafka producer instance."""
@@ -22,10 +22,10 @@ def create_kafka_producer(broker_url):
         # api_version is often needed for compatibility
         producer = KafkaProducer(
             bootstrap_servers=[broker_url],
-            value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+            value_serializer=lambda v: json.dumps(v).encode("utf-8"),
             retries=5,
             request_timeout_ms=30000,
-            api_version=(0, 10, 1)
+            api_version=(0, 10, 1),
         )
         logging.info("✅ Successfully connected to Kafka broker.")
         return producer
@@ -33,13 +33,12 @@ def create_kafka_producer(broker_url):
         logging.error(f"❌ Failed to connect to Kafka broker: {e}")
         return None
 
+
 def stream_data(producer, topic, file_path):
     """
     Reads data from a CSV file and streams it to a Kafka topic indefinitely.
     """
-    logging.info(
-        f"Starting to stream from '{file_path}' to topic '{topic}'."
-    )
+    logging.info(f"Starting to stream from '{file_path}' to topic '{topic}'.")
 
     try:
         data_df = pd.read_csv(file_path)
@@ -63,6 +62,7 @@ def stream_data(producer, topic, file_path):
             "Restarting stream for continuous simulation."
         )
 
+
 if __name__ == "__main__":
     producer = create_kafka_producer(KAFKA_BROKER)
 
@@ -74,4 +74,4 @@ if __name__ == "__main__":
         finally:
             producer.flush()
             producer.close()
-            logging.info("🛑 Kafka producer closed.") 
+            logging.info("🛑 Kafka producer closed.")
