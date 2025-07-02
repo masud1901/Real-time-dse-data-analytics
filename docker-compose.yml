@@ -54,7 +54,7 @@ services:
     depends_on:
       - spark-master
     ports:
-      - "8081:8081"
+      - "8082:8081"
     volumes:
       - ./src:/app/src
       - ./data:/app/data
@@ -62,4 +62,53 @@ services:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
       - SPARK_WORKER_MEMORY=1G
-      - SPARK_WORKER_CORES=1 
+      - SPARK_WORKER_CORES=1
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+
+  airflow-webserver:
+    image: apache/airflow:2.6.3
+    container_name: airflow-webserver
+    depends_on:
+      - postgres
+    entrypoint: /opt/airflow/_entrypoint.sh
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__WEBSERVER__SECRET_KEY=your-super-secret-key
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./_entrypoint.sh:/opt/airflow/_entrypoint.sh
+    command: webserver
+
+  airflow-scheduler:
+    image: apache/airflow:2.6.3
+    container_name: airflow-scheduler
+    depends_on:
+      - postgres
+    entrypoint: /opt/airflow/_entrypoint.sh
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./_entrypoint.sh:/opt/airflow/_entrypoint.sh
+    command: scheduler 
